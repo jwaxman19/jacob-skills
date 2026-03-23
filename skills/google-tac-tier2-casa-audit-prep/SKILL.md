@@ -4,10 +4,11 @@ description: >-
   Prepares codebases for Google TAC Tier 2 and CASA Tier 2 application security
   assessments (third-party / CASA-style SAQ, OWASP ASVS themes on external interfaces).
   Maps the standard 23-item self-assessment questionnaire to file-level evidence, tests,
-  and gaps; guides hardening OAuth, webhooks, APIs, crypto, and logging. Use when
-  prepping for Google ecosystem security review, CASA workbook evidence, building an
-  audit evidence pack, answering assessors with repo pointers, tracing SAQ items to
-  source, or searching for TAC Tier 2 / CASA audit prep.
+  and gaps; guides hardening OAuth, webhooks, APIs, crypto, and logging. Verifies
+  encryption algorithms and modes for stored data, including Google API data when
+  persisted. Use when prepping for Google ecosystem security review, CASA workbook
+  evidence, building an audit evidence pack, answering assessors with repo pointers,
+  tracing SAQ items to source, or searching for TAC Tier 2 / CASA audit prep.
 ---
 
 # Google TAC Tier 2 / CASA application security audit prep (code-first)
@@ -30,7 +31,7 @@ Do **not** lead with narrative paragraphs; lead with **traceability**. Narrative
 
 ## How to work (agent workflow)
 
-1. **Inventory attack surface in code** — List HTTP routes, serverless handlers, OAuth/callback URLs, webhooks, public client entry points, env-driven secrets.
+1. **Inventory attack surface in code** — List HTTP routes, serverless handlers, OAuth/callback URLs, webhooks, public client entry points, env-driven secrets. Where the app **stores data from Google APIs** (Gmail, Drive, Calendar, People, Chat, etc.), map **ingestion → persistence**: every destination (DB row, blob, cache, file) and whether **your code** or **only the platform** encrypts it.
 2. **Map SAQ items → evidence** — For each of the 23 items, fill: Applicable (Yes/No/N/A/Partial), **primary code reference**, tests, gap.
 3. **Harden and test** — Prefer TDD for security fixes; add or extend tests that fail if the control regresses.
 4. **Document** — Short evidence pack (diagrams, data flow, env matrix) that **links to** the same paths already cited in step 2.
@@ -92,7 +93,11 @@ Gap: if Partial/No — concrete next step
 - **OAuth / OIDC** — Callback handling, state/nonce, redirect allowlists, token storage, refresh revocation.
 - **HTTP surface** — Explicit methods/paths; webhook verification (HMAC, OIDC JWT).
 - **Logging** — No token bodies; redact PII; `__DEV__` vs production logging on clients.
-- **Crypto** — At-rest encryption for app-managed keys; avoid claiming global constant-time (#23)—cite specific comparisons (e.g. timing-safe string compare for shared secrets).
+- **Crypto / at-rest (incl. Google data)** — When **storing any sensitive data** (including **data obtained from Google** when applicable), verify **what** is encrypted, **where**, and **with what**:
+  - **Algorithms** — Name the cipher, mode, and key length where your code or config chooses them (e.g. AES-256-GCM, ChaCha20-Poly1305, XChaCha20). Flag deprecated or weak choices (DES, RC4, ECB for bulk data, MD5/SHA1 for new designs).
+  - **Who encrypts** — Split **application-layer** crypto (libraries, envelope encryption, KMS) from **provider default** (e.g. encrypted RDS, GCS/S3 buckets with SSE-KMS, managed DB at rest). Document both with file paths or console settings; cite **#22** and protection levels **#4/#5** as applicable.
+  - **Google-sourced data** — If tokens, messages, attachments, or PII from Google are written to disk/DB/object storage, trace the **write path** and record the **same** algorithm/evidence as for other regulated data. If you never persist Google data, **N/A** with a one-line justification.
+  - **Constant-time** (#23) — Only claim where proven (e.g. `crypto.timingSafeEqual` for secrets); do not blanket-assert “all crypto is constant-time.”
 
 ## Scans and bundle (supporting evidence, not the main story)
 
