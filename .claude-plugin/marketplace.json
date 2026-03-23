@@ -2,12 +2,12 @@
   "name": "jacob-skills",
   "owner": {
     "name": "Jacob",
-    "url": "https://github.com"
+    "url": "https://github.com/jwaxman19"
   },
   "metadata": {
     "description": "Agent skills: Google TAC Tier 2 / CASA security audit prep and related engineering workflows",
     "version": "0.1.0",
-    "repository": "https://github.com/jacob/jacob-skills"
+    "repository": "https://github.com/jwaxman19/jacob-skills"
   },
   "plugins": [
     {

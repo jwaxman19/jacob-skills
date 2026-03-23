@@ -2,6 +2,8 @@
 
 Agent Skills for coding agents (Cursor, Claude Code, and others that follow the [Agent Skills](https://agentskills.io/specification.md) layout). Inspired by [marketingskills](https://github.com/coreyhaines31/marketingskills) and [gstack](https://github.com/garrytan/gstack): small, copyable `skills/<name>/SKILL.md` trees you can symlink, submodule, or paste into your agent config.
 
+**Repository:** [github.com/jwaxman19/jacob-skills](https://github.com/jwaxman19/jacob-skills)
+
 ## Skills
 
 | Skill | Summary |
@@ -21,7 +23,7 @@ Or clone this repo anywhere and point Cursor at `skills/<skill-name>` via your w
 
 ## Install (Claude Code plugin)
 
-If you use Claude Code marketplaces, add this repo as a marketplace and install the bundled plugin (see `.claude-plugin/marketplace.json`). Adjust `metadata.repository` in that file to match your fork’s GitHub URL before publishing.
+If you use Claude Code marketplaces, add this repo as a marketplace and install the bundled plugin (see `.claude-plugin/marketplace.json`; `metadata.repository` points at this GitHub repo).
 
 ## Contributing
 
