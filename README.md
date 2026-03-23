@@ -2,6 +2,8 @@
 
 A collection of practical agent skills for real work.
 
+**Repo:** https://github.com/jwaxman19/jacob-skills
+
 ## Skills
 
 - **[google-tac-tier2-casa-audit-prep](skills/google-tac-tier2-casa-audit-prep/)**  
