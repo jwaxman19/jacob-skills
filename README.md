@@ -48,10 +48,6 @@ Or clone this repo anywhere and point Cursor at `skills/<skill-name>` via your w
 
 If you use Claude Code marketplaces, this repo includes `.claude-plugin/marketplace.json` so you can add it as a marketplace source. That is **separate** from skills.sh discoverability (which is driven by **`npx skills add`** installs).
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md).
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
