@@ -75,6 +75,21 @@ function diffMinutes(a, b) {
   return Math.abs(new Date(a) - new Date(b)) / 60000;
 }
 
+/**
+ * Milliseconds between message index i-1 and i when `date` is omitted (auto-fill).
+ * Deterministic, uneven gaps — quick replies, pauses, typing beats — not on-the-minute steps.
+ */
+function naturalGapMs(index) {
+  if (index <= 0) return 0;
+  const gapsSec = [
+    19, 42, 8, 127, 33, 56, 14, 203, 48, 11, 94, 22, 361, 29, 67, 18,
+    152, 9, 88, 41, 236, 16, 73, 31, 119, 24, 55, 198, 12, 77, 44, 26,
+  ];
+  const base = gapsSec[(index - 1) % gapsSec.length];
+  const jitter = (index * 37) % 23;
+  return (base + jitter) * 1000;
+}
+
 function formatTimestamp(date, timeFormat) {
   const d = new Date(date);
   const now = new Date();
@@ -178,16 +193,34 @@ function generateHTML(config) {
   for (const r of recipients) recipientMap[r.id] = r;
 
   const isGroup = recipients.length > 1;
-  const title = config.title || (isGroup ? recipients.map(r => r.name).join(', ') : recipients[0].name);
+  const autoTitle = isGroup ? recipients.map(r => r.name).join(', ') : recipients[0].name;
+  const title = config.title != null ? config.title : autoTitle;
 
-  // Assign sequential dates if none provided (1 min apart)
+  // Named groups: one header photo (or initials). Unnamed groups: overlapping participant circles.
+  const groupHeaderStyle =
+    config.groupHeaderStyle
+    || (isGroup && config.title != null && String(config.title) !== autoTitle ? 'single' : 'stacked');
+
+  // Assign dates when omitted: cumulative uneven gaps (see naturalGapMs), not round 1-minute steps
   const base = Date.now();
-  const messages = (config.messages || []).map((m, i) => ({
-    method: 'data',
-    status: 'default',
-    ...m,
-    date: m.date || new Date(base + i * 60000).toISOString(),
-  }));
+  let prevMs = base;
+  const rawMessages = config.messages || [];
+  const messages = rawMessages.map((m, i) => {
+    let date;
+    if (m.date) {
+      date = m.date;
+      prevMs = new Date(m.date).getTime();
+    } else {
+      if (i > 0) prevMs += naturalGapMs(i);
+      date = new Date(prevMs).toISOString();
+    }
+    return {
+      method: 'data',
+      status: 'default',
+      ...m,
+      date,
+    };
+  });
 
   const isDark = config.mode === 'dark';
   const timeFormat = config.timeFormat || '12h';
@@ -213,11 +246,14 @@ function generateHTML(config) {
   let headerAvatarHTML;
   if (!isGroup) {
     headerAvatarHTML = circleAvatar(recipients[0].name, recipients[0].avatar, 40, 18);
+  } else if (groupHeaderStyle === 'single') {
+    headerAvatarHTML = circleAvatar(title, config.groupAvatar, 40, 18);
   } else {
     const [r1, r2] = recipients;
+    const rB = r2 || r1;
     headerAvatarHTML = `<div style="position:relative;width:40px;height:40px">
       <div style="position:absolute;left:-5px;bottom:7px;width:28px;height:28px;border-radius:50%;overflow:hidden">${avatarInner(r1.name, r1.avatar, 13)}</div>
-      <div style="position:absolute;left:23px;bottom:0;width:24px;height:24px;border-radius:50%;overflow:hidden">${avatarInner(r2.name, r2.avatar, 11)}</div>
+      <div style="position:absolute;left:23px;bottom:0;width:24px;height:24px;border-radius:50%;overflow:hidden">${avatarInner(rB.name, rB.avatar, 11)}</div>
     </div>`;
   }
 

@@ -31,6 +31,14 @@ npm install
    ```
 3. The output is a crisp, retina-quality PNG (3× device scale factor, ~316×684 logical pixels).
 
+### Realistic timestamps & cadence
+
+Real threads do not look like a spreadsheet: times are not all on the hour or `:00` seconds, and spacing between messages varies.
+
+- **Clock strings**: When you set `date` explicitly, use believable seconds and minutes (e.g. `2026-03-20T14:47:23` rather than always `…T14:00:00`). Messages in the same burst can be a few seconds apart; the next beat might be a minute or two later when someone is typing or distracted.
+- **Rhythm**: Mix rapid back-and-forth with short pauses. Longer gaps (tens of minutes or hours) belong when the conversation actually drops — that also drives the **>60 min** timestamp dividers in the UI.
+- **Auto-filled dates**: If you omit `date` on some messages, the generator applies **uneven** gaps between them (not uniform one-minute steps), so defaults are less “clean” than before.
+
 ### Debugging
 
 Dump the rendered HTML for inspection:
@@ -47,7 +55,7 @@ Pre-built examples live in the [`./examples/`](./examples/) folder. Each has a `
 | Example | Config | Screenshot | Description |
 |---------|--------|------------|-------------|
 | Simple 1-on-1 | [`simple.json`](./examples/simple.json) | [`simple.png`](./examples/simple.png) | Light mode, basic conversation with Mom, delivery receipt |
-| Group chat | [`group.json`](./examples/group.json) | [`group.png`](./examples/group.png) | Multi-recipient chat with avatars, name labels, timestamps, unreads badge |
+| Group chat | [`group.json`](./examples/group.json) | [`group.png`](./examples/group.png) | Named group: single header photo, name labels beside bubbles, timestamps, unreads badge |
 | Dark mode | [`dark.json`](./examples/dark.json) | [`dark.png`](./examples/dark.png) | Dark theme, low battery, read receipt, late-night vibe |
 
 To regenerate all examples:
@@ -73,14 +81,22 @@ npm run examples
   // Option A: 1-on-1 chat (no avatars next to messages, no name labels)
   "recipient": { "name": "Mom", "avatar": "/path/to/photo.jpg" },
 
-  // Option B: group chat (shows avatars + name labels per sender)
+  // Option B: group chat (name labels + avatar beside each incoming tail bubble)
   "recipients": [
     { "id": "alice", "name": "Alice", "avatar": "/path/to/alice.jpg" },
     { "id": "bob",   "name": "Bob" }
   ],
 
-  // Header display name (defaults to recipient name or comma-joined names)
-  "title": "Alice & Bob",
+  // Header title (defaults to comma-joined participant names)
+  "title": "Weekend Plans",
+
+  // Named vs unnamed group header (Messages UI):
+  // - If "title" differs from the auto comma-joined list → named group: ONE header circle
+  //   (optional image via groupAvatar; else initials from title).
+  // - If you omit "title" or set it exactly to that comma-joined list → unnamed group:
+  //   overlapping floating profile pics in the header.
+  // Override: "groupHeaderStyle": "single" | "stacked"
+  "groupAvatar": "/path/to/group-photo.jpg",
 
   // ── Messages ──────────────────────────────────────────────────────────────
   "messages": [
@@ -89,8 +105,8 @@ npm run examples
                                        // "recipient" for 1-on-1 chats
                                        // or a recipient id (e.g. "alice") for group chats
       "text":   "Hey!",               // message body — supports \n for line breaks
-      "date":   "2026-01-15T14:30:00", // ISO datetime — drives grouping & timestamp labels
-                                       // omit to auto-space messages 1 min apart
+      "date":   "2026-01-15T14:47:23", // ISO datetime — drives grouping & timestamp labels
+                                       // omit: generator uses uneven, natural-ish gaps (not 1 min each)
       "method": "data",               // "data" = iMessage blue (default) | "text" = SMS green
       "status": "default",            // sender only: "default"|"delivered"|"read"|"not_delivered"
       "gap":    6                     // optional px override for bottom padding after this message
@@ -140,10 +156,12 @@ The generator automatically handles message grouping and timestamp dividers base
 |-------|------|---------|-------|
 | `recipient` | object | — | `{ name, avatar? }` for 1-on-1 |
 | `recipients` | array | — | `[{ id, name, avatar? }]` for group |
-| `title` | string | auto | Header display name |
+| `title` | string | auto | Header display name; if set to something other than comma-joined names, header uses a single circle (named group) |
+| `groupAvatar` | string | — | Optional image for named-group header (single circle) |
+| `groupHeaderStyle` | string | inferred | `"single"` (one header photo) or `"stacked"` (floating participant pics); defaults from `title` vs auto title |
 | `messages[].actor` | string | required | `"sender"`, `"recipient"`, or a recipient id |
 | `messages[].text` | string | required | Message body |
-| `messages[].date` | ISO string | auto (1 min apart) | Controls grouping & dividers |
+| `messages[].date` | ISO string | uneven auto gaps | Controls grouping & dividers; prefer messy seconds when hand-authoring |
 | `messages[].method` | string | `"data"` | `"data"` (blue) or `"text"` (green) |
 | `messages[].status` | string | `"default"` | `delivered`, `read`, `not_delivered` |
 | `messages[].gap` | number | auto | Bottom padding override in px |
