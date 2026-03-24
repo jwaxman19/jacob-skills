@@ -23,8 +23,52 @@ function esc(str) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/** First extended grapheme cluster (handles emoji, ZWJ sequences, etc.). */
+function firstGrapheme(str) {
+  if (!str) return '';
+  const seg = new Intl.Segmenter('en', { granularity: 'grapheme' });
+  for (const s of seg.segment(str)) return s.segment;
+  return '';
+}
+
+/** Take up to `max` graphemes (not UTF-16 code units). */
+function sliceGraphemes(str, max) {
+  if (!str || max <= 0) return '';
+  const seg = new Intl.Segmenter('en', { granularity: 'grapheme' });
+  const out = [];
+  for (const s of seg.segment(str)) {
+    out.push(s.segment);
+    if (out.length >= max) break;
+  }
+  return out.join('');
+}
+
+/** True if this grapheme is emoji-like (Messages never shows these in the header title or initials). */
+function isEmojiLikeGrapheme(g) {
+  if (!g) return false;
+  if (/\p{Extended_Pictographic}/u.test(g)) return true;
+  if (/^\p{Regional_Indicator}$/u.test(g)) return true;
+  return false;
+}
+
+/** Strip emoji for avatar initials only; header title and message bubbles keep emoji. */
+function stripEmojiForHeader(str) {
+  const src = String(str || '');
+  const seg = new Intl.Segmenter('en', { granularity: 'grapheme' });
+  const out = [];
+  for (const s of seg.segment(src)) {
+    if (!isEmojiLikeGrapheme(s.segment)) out.push(s.segment);
+  }
+  return out.join('').replace(/\s+/g, ' ').trim();
+}
+
 function getInitials(name) {
-  return (name || '').trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const plain = stripEmojiForHeader(name);
+  const words = plain.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return '';
+  const parts = words.map(w => firstGrapheme(w)).filter(Boolean);
+  const joined = parts.join('').toUpperCase();
+  return sliceGraphemes(joined, 2);
 }
 
 function diffMinutes(a, b) {
@@ -389,6 +433,20 @@ function findChrome() {
   return null;
 }
 
+/**
+ * Load generated HTML into the page for screenshotting.
+ * Uses `waitUntil: 'load'` (not `networkidle0`): webfonts keep connections active, so
+ * "network idle" often never happens—especially with many concurrent Chrome instances.
+ */
+async function loadHtmlForScreenshot(page, html, timeoutMs = 120000) {
+  await page.setDefaultNavigationTimeout(timeoutMs);
+  await page.setContent(html, { waitUntil: 'load', timeout: timeoutMs });
+  await Promise.race([
+    page.evaluate(() => document.fonts.ready),
+    new Promise((resolve) => setTimeout(resolve, 5000)),
+  ]);
+}
+
 // ─── CLI ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -424,10 +482,15 @@ async function main() {
     process.exit(1);
   }
 
-  const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+  const browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+    args: ['--no-sandbox', '--disable-dev-shm-usage'],
+  });
   const page = await browser.newPage();
   await page.setViewport({ width: 800, height: 900, deviceScaleFactor: 3 });
-  await page.setContent(html, { waitUntil: 'networkidle0' });
+  await loadHtmlForScreenshot(page, html);
+
   const el = await page.$('#phone');
   await el.screenshot({ path: outputPath });
   await browser.close();
