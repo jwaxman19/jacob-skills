@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Text Message Generator
+ * iMessage Screenshot Generator
  * Generates a realistic iPhone Messages screenshot from a JSON config.
  *
  * Usage:
@@ -45,10 +45,10 @@ function formatTimestamp(date, timeFormat) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ` at ${timeStr}`;
 }
 
-// ─── SVG icons (exact paths from postfully source) ───────────────────────────
+// ─── SVG icons (iOS status bar) ───────────────────────────────────────────────
 
 // Signal: 4 bars left(short)→right(tall). active = how many bars are solid.
-// Postfully levels: full=4, strong=3, medium=2, low=1
+// Levels: full=4, strong=3, medium=2, low=1
 function signalSVG(level) {
   const map = { full: 4, strong: 3, medium: 2, low: 1, none: 0 };
   const active = map[level] ?? 4;
@@ -240,7 +240,7 @@ function generateHTML(config) {
         </div>
       </div>`;
     } else if (!isGroup) {
-      // Single-recipient: no avatar column, no name label (matches postfully basic HTML)
+      // Single-recipient: no avatar column, no name label
       msgsHTML += `<div style="display:flex;flex-direction:column;gap:1px;padding-bottom:${pb}">
         <div style="display:flex;width:100%;align-items:flex-end;gap:4px">
           <div style="display:flex;flex:1;flex-direction:column;align-items:flex-start">
@@ -297,8 +297,7 @@ function generateHTML(config) {
   position:relative; display:flex; flex-direction:column;
   height:684px; width:316px;
   font-family:'Inter',sans-serif; font-feature-settings:normal;
-  overflow:hidden; border-radius:16px;
-  border:1px solid #e5e7eb; box-shadow:0 10px 40px rgba(0,0,0,0.12);
+  overflow:hidden;
   background:white;
 ">
 
@@ -411,7 +410,7 @@ async function main() {
     };
   }
 
-  const outputPath = parsed.output || `text-message-${Date.now()}.png`;
+  const outputPath = parsed.output || `imessage-screenshot-${Date.now()}.png`;
   const html = generateHTML(config);
 
   if (parsed['html-output']) {
@@ -427,7 +426,7 @@ async function main() {
 
   const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage();
-  await page.setViewport({ width: 800, height: 900 });
+  await page.setViewport({ width: 800, height: 900, deviceScaleFactor: 3 });
   await page.setContent(html, { waitUntil: 'networkidle0' });
   const el = await page.$('#phone');
   await el.screenshot({ path: outputPath });

@@ -1,10 +1,10 @@
 {
-  "name": "text-message-generator",
+  "name": "imessage-screenshot-generator",
   "version": "1.0.0",
   "description": "Generate iPhone Messages screenshots from JSON configs",
   "main": "generate.js",
   "bin": {
-    "text-message": "./generate.js"
+    "imessage-screenshot": "./generate.js"
   },
   "scripts": {
     "examples": "node generate.js --config examples/simple.json --output examples/simple.png && node generate.js --config examples/group.json --output examples/group.png && node generate.js --config examples/dark.json --output examples/dark.png"
