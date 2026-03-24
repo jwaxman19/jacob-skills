@@ -1,0 +1,18 @@
+{
+  "title": "Weekend Plans",
+  "recipients": [
+    { "id": "alice", "name": "Alice" },
+    { "id": "bob",   "name": "Bob" }
+  ],
+  "messages": [
+    { "actor": "sender", "text": "Anyone free Saturday?",          "date": "2026-03-20T10:00:00" },
+    { "actor": "alice",  "text": "I am!",                          "date": "2026-03-20T10:00:30" },
+    { "actor": "alice",  "text": "What did you have in mind?",     "date": "2026-03-20T10:00:45" },
+    { "actor": "bob",    "text": "Same, I'm in",                   "date": "2026-03-20T10:14:00", "gap": 10 },
+    { "actor": "sender", "text": "Hiking at Marin Headlands?",     "date": "2026-03-20T10:14:30" },
+    { "actor": "alice",  "text": "Perfect 🙌",                     "date": "2026-03-20T10:15:00", "status": "read" }
+  ],
+  "unreads": 3,
+  "signal": "strong",
+  "battery": "medium"
+}
