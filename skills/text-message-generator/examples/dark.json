@@ -1,0 +1,15 @@
+{
+  "recipient": { "name": "Alex" },
+  "messages": [
+    { "actor": "recipient", "text": "Still up?" },
+    { "actor": "sender",    "text": "Yeah can't sleep" },
+    { "actor": "sender",    "text": "Been staring at the ceiling for an hour", "gap": 4 },
+    { "actor": "recipient", "text": "Same lol" },
+    { "actor": "recipient", "text": "Want to get food?" },
+    { "actor": "sender",    "text": "Yes obviously", "status": "read" }
+  ],
+  "mode": "dark",
+  "time": "2:14",
+  "battery": "low",
+  "signal": "medium"
+}
